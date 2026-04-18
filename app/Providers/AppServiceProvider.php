@@ -5,6 +5,8 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Symfony\Component\Mime\MimeTypeGuesserInterface;
 use Symfony\Component\Mime\MimeTypes;
+use Illuminate\Support\Facades\URL;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->registerFallbackSymfonyMimeGuesser();
+        URL::forceScheme('https');
     }
 
     /**
