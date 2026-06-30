@@ -24,30 +24,33 @@
 		<!-- Row -->
 		<div class="row">
 			<div class="col-md-12 mb3">
-				<form method="get">
+				<form method="post" action="{{ route('admin_dashboard') }}">
+					@csrf
 					<div class=" d-flex align-items-center mb-5">
 						<div class="">
-						
-					<?php 
-					if (isset($_GET['select_date'])) {
-						$date = date('Y-m-d', strtotime($_GET['select_date']));
-					} else {
-						$date = date('Y-m-d'); // Use Y-m-d format
-					}
-					?>
-					
-
-							<input type="date" name="select_date" value="{{$date}}" class="form-control"
+					@php
+						$dashPick = request('filter_date') ?: request('select_date');
+						if (is_string($dashPick) && $dashPick !== '') {
+							try {
+								$date = \Carbon\Carbon::parse($dashPick)->format('Y-m-d');
+							} catch (\Exception $e) {
+								$date = date('Y-m-d');
+							}
+						} else {
+							$date = date('Y-m-d');
+						}
+					@endphp
+							<input type="date" name="filter_date" value="{{ $date }}" class="form-control"
 								placeholder="Select Date" id="cdate" required>
 						</div>
 						<div class="">
-							<button class="btn btn-success m-0">Search</button>
+							<button type="submit" class="btn btn-success m-0">Search</button>
 						</div>
 						<div class="">
-							<a href="{{URL::to('/administrator/dashboard')}}" class="btn btn-success m-0">Refresh Today</a>
+							<a href="{{ route('admin_dashboard') }}" class="btn btn-success m-0">Refresh Today</a>
 						</div>
 					</div>
-					{{ Form::close() }}
+				</form>
 
 			</div>
 

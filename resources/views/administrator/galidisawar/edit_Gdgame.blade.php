@@ -17,9 +17,9 @@
                         <div class="col-md-12">
                             <div class="form-wrap">
                                {{ Form::open(array('url' => 'administrator/edit-store-gd-game')) }}
-                                <input type="hidden" name="markets_id" value="{{ $select->id ?? $select->_id }}">
-                                <input type="hidden" name="mongo_id" value="{{ $select->_id }}">
-                                <!-- <input type="hidden" name="markets_id" value="{{$select->id}}"> -->
+                                @php $gdMarketPk = (string) $select->getKey(); @endphp
+                                <input type="hidden" name="markets_id" value="{{ $gdMarketPk }}">
+                                <input type="hidden" name="mongo_id" value="{{ $gdMarketPk }}">
                                 <div class="form-body">
                                         <hr class="light-grey-hr"/>
                                         <div class="row">

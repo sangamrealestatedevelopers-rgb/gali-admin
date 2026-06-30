@@ -10,7 +10,7 @@ $winningpredictionManagement = ['winning-prediction-list'];
 $reportManagement = ['user-bidthistory-list','customer-sell-report-list','winningreport-list','transport-point-report-list','bid-winning-report-list','withdraw-report-list','add-fund-report-list','auto-deposit-history-list'];
 $walletManagement = ['fund-request-list','withdraw-request-list','add-fund','bid-revert'];
 $gameandnumberManagement = ['single-digit','jodi-digit','single-panna','double-panna','triple-panna','half-sangam','full-sangam'];
-$noticeManagement = ['notice-list','add-notice'];
+$noticeManagement = ['notice-list','add-notice','terms-conditions-edit'];
 $starlineManagement = ['game-name-list','game-rate-list','bid-history-list','declare-result-list','result-history-list','sell-report-list','winning-report-list','winning-prediction'];
 $galidisawarManagement = ['gali-disawar-game-name-list','gali-disawar-game-rate-list','gali-disawar-bid-history-list','gali-disawar-declare-result-list','gali-disawar-result-history-list','gali-disawar-sell-report-list','gali-disawar-winning-report-list','gali-disawar-winning-prediction'];
 $depositManagementOld = ['deposit-pending-old','deposit-cancelled-old','deposit-success-old'];
@@ -436,6 +436,9 @@ if (!$userData || !isset($userData->id)) {
                 </li>--}}
                 <li>
                     <a href="{{route('app_notice_list')}}">App Notice List</a>
+                </li>
+                <li>
+                    <a href="{{route('admin_terms_conditions_edit')}}">Terms &amp; Conditions</a>
                 </li>
             </ul>
         </li>

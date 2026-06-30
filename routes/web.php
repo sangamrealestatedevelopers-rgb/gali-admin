@@ -28,6 +28,7 @@ use App\Http\Controllers\Administrator\WinningPredictionController;
 use App\Http\Controllers\Administrator\WalletController;
 use App\Http\Controllers\Administrator\GameAndNumberController;
 use App\Http\Controllers\Administrator\NoticeController;
+use App\Http\Controllers\Administrator\TermsConditionsController;
 use App\Http\Controllers\Administrator\StarlineController;
 use App\Http\Controllers\Administrator\WithdrawManageController;
 use App\Http\Controllers\Administrator\DepositManagementController;
@@ -130,7 +131,7 @@ Route::group(['namespace' => 'Administrator', 'prefix' => 'administrator'], func
 
 Route::group(['namespace' => 'Administrator', 'prefix' => 'administrator', 'middleware' => ['auth.administrator:administrator']], function () {
 
-  Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin_dashboard');
+  Route::match(['get', 'post'], '/dashboard', [DashboardController::class, 'index'])->name('admin_dashboard');
 
   //////////////////////////////////////////////OLD ROUTE//////////////////////////////////////////////
   Route::get('/change-password', [PasswordController::class, 'change_password'])->name('admin_change_pass');
@@ -506,6 +507,9 @@ Route::group(['namespace' => 'Administrator', 'prefix' => 'administrator', 'midd
   Route::get('/app-notice-edit/{id}', [NoticeController::class, 'edit_app_notice_data'])->Name('edit_app_notice_data');
   Route::post('/app-notice-editStore', [NoticeController::class, 'StoreAppNoticeData'])->Name('StoreAppNoticeData');
   Route::get('/update-is-disaplay/{id}', [NoticeController::class, 'update_is_display'])->name('update_isdisplay');
+
+  Route::get('/terms-conditions-edit', [TermsConditionsController::class, 'edit'])->name('admin_terms_conditions_edit');
+  Route::post('/terms-conditions-update', [TermsConditionsController::class, 'update'])->name('admin_terms_conditions_update');
 
   //Starline Management Controller
   Route::get('/game-name-list', [StarlineController::class, 'index'])->Name('game_name_list');

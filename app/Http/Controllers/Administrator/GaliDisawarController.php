@@ -308,7 +308,9 @@ class GaliDisawarController extends Controller
         $insert['market_position'] = (int)$request->market_position;
         $insert['status'] = (int)$request->status;
 
-        $market = $this->findGdMarketByRouteId($request->markets_id);
+        // Prefer mongo _id (same as edit URL); legacy forms sent markets_id from document `id` field which breaks lookup.
+        $routeId = $request->input('mongo_id') ?: $request->markets_id;
+        $market = $this->findGdMarketByRouteId($routeId);
         if (!$market) {
             return redirect()->route('gali_disawar_game_name_list')->with('error_message', 'Game not found.');
         }
@@ -319,7 +321,7 @@ class GaliDisawarController extends Controller
         }
 
         if (!$updated) {
-            $mongoId = $market->getOriginal('_id') ?? $market->_id ?? $request->markets_id;
+            $mongoId = $market->getOriginal('_id') ?? $market->_id ?? $routeId;
 
             if (is_object($mongoId)) {
                 $updated = Market::where('_id', $mongoId)->update($insert);

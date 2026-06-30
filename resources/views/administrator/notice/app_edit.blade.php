@@ -18,16 +18,17 @@
                             <div class="form-wrap">
                                 {{ Form::open(array('url' => route('StoreAppNoticeData'), 'data-toggle'=>'validator' , 'class'=> 'form-horizontal', 'enctype'=>'multipart/form-data')) }}
 
-                                <input type="hidden" name="id" value="{{$app_description->id}}" id='description'>
+                                {{-- Use _id via getKey(); $model->id can be a separate DB field and breaks POST lookup. --}}
+                                <input type="hidden" name="id" value="{{ (string) $app_description->getKey() }}">
                                 <div class="form-body">
                                         <hr class="light-grey-hr"/>
                                         <div class="row">
-                                            
+
                                             <div class="col-md-9">
                                                 <div class="form-group">
                                                     <label class="control-label col-md-4">Description<span class="text-danger">*</span></label>
                                                     <div class="col-md-7">
-                                                        <textarea class="form-control" name="description" >{{$app_description->description}}</textarea>
+                                                        <textarea class="form-control" name="description" required>{{ old('description', $app_description->description) }}</textarea>
                                                         @error('description')
                                                             <div class="alert alert-danger alert-dismissable alert-style-1">
                                                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
@@ -38,7 +39,6 @@
                                                 </div>
                                             </div>
 
-                                            
                                            
                                             <!-- <div class="col-md-9">
                                                 <div class="form-group">
@@ -82,20 +82,3 @@
     </div>
 </div>
 @endsection
-@push('scripts')
-<script src="{{asset('/backend/developer/js/notice.js')}}"></script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
-<script type="text/javascript">
-$('.timepicker').timepicker({
-    
-});
-
-	</script>
-
-<script type="text/javascript">
-$('.datepicker').datepicker({
-});
-
-	</script>
-@endpush

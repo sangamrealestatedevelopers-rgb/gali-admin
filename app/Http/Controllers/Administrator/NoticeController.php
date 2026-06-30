@@ -18,6 +18,7 @@ use Hash;
 use DB;
 use App\Helpers\Helper;
 use MongoDB\BSON\ObjectId;
+use MongoDB\BSON\UTCDateTime;
 
 class NoticeController extends Controller
 {
@@ -241,6 +242,26 @@ class NoticeController extends Controller
         return null;
     }
 
+    /**
+     * Filter that matches a document whether _id is stored as a 24-char string or as ObjectId.
+     * Eloquent where('_id', $x) + convertKey() only uses one form, so updates can match 0 rows.
+     */
+    private function appNoticeIdFilter(string $id): array
+    {
+        if (preg_match('/^[a-f\d]{24}$/i', $id)) {
+            try {
+                return ['$or' => [
+                    ['_id' => $id],
+                    ['_id' => new ObjectId($id)],
+                ]];
+            } catch (\Throwable $e) {
+                return ['_id' => $id];
+            }
+        }
+
+        return ['_id' => $id];
+    }
+
     function edit_app_notice_data($id)
     {
         $app_description = $this->findAppNoticeByRouteId($id);
@@ -253,25 +274,43 @@ class NoticeController extends Controller
 
     public function StoreAppNoticeData(Request $request)
     {
-         $this->validate($request, [
-                'description'=>'required',                
-            ]
-        );
+        $this->validate($request, [
+            'description' => 'required',
+        ]);
 
-        $notice = $this->findAppNoticeByRouteId($request->id);
-        if (!$notice) {
+        $id = preg_replace('/[\x{200B}-\x{200D}\x{FEFF}]/u', '', rawurldecode(trim((string) $request->input('id'))));
+        if ($id === '') {
             return redirect()->route('app_notice_list')->with('error_message', 'App notice not found.');
         }
 
-        $notice->description = $request->description;
-        $notice->save();
+        $description = $request->input('description');
+        $filter = $this->appNoticeIdFilter($id);
+
+        /** @var int $matched */
+        $matched = AppNotice::raw(function ($collection) use ($filter, $description) {
+            $result = $collection->updateOne(
+                $filter,
+                [
+                    '$set' => [
+                        'description' => $description,
+                        'updated_at' => new UTCDateTime((int) round(microtime(true) * 1000)),
+                    ],
+                ]
+            );
+
+            return $result->getMatchedCount();
+        });
+
+        if ($matched < 1) {
+            return redirect()->route('app_notice_list')->with('error_message', 'App notice not found.');
+        }
 
         return redirect()->route('app_notice_list')->with('success_message', 'App Notice has been updated successfully.');
     }
 
     public function update_is_display($id)
     {
-        $notice = AppNotice::find($id);
+        $notice = $this->findAppNoticeByRouteId($id);
 
         if ($notice) {
             $notice->is_display = $notice->is_display == 1 ? 0 : 1;

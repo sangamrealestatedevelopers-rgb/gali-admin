@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin | Playonlineds</title>
+    <title>Admin | 7STAR</title>
     <!-- <link rel="shortcut icon" type="image/favicon" href="<?php echo e(asset('/front')); ?>/images/fevicon.ico"> -->
     <link href="<?php echo e(asset('backend/vendors/bower_components/jasny-bootstrap/dist/css/jasny-bootstrap.min.css')); ?>"
         rel="stylesheet" type="text/css" />

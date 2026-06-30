@@ -17,6 +17,7 @@ use DB;
 use Session;
 use Hash;
 use Helper;
+use Illuminate\Support\Facades\Log;
 use MongoDB\BSON\UTCDateTime;
 
 class DashboardController extends Controller
@@ -27,13 +28,31 @@ class DashboardController extends Controller
 
 	public function index(Request $request)
 	{
+		// POST search → redirect with query (no session: avoids "stuck" filter breaking every dashboard load).
+		if ($request->isMethod('post')) {
+			$validated = $request->validate([
+				'filter_date' => 'required|date',
+			]);
+			return redirect()->route('admin_dashboard', ['filter_date' => $validated['filter_date']]);
+		}
 
-		if(isset($_GET['select_date'])){
-			$date = date('d-m-Y',strtotime($_GET['select_date']));
-			$date1 = date('Y-m-d',strtotime($_GET['select_date']));
-			
-			$today_deposit = Point::where('tr_nature', 'TRDEPO002')->where('date', $date)->get()->sum('tr_value');
-			$winningAmount = Point::where('tr_nature', 'TRWIN005')->get()->sum('tr_value');
+		// GET: date only from query (bookmark / after redirect). Session removed — was forcing filtered branch on every visit.
+		$rawPick = $request->query('filter_date') ?: $request->query('select_date');
+
+		if (is_string($rawPick) && $rawPick !== '') {
+
+			try {
+				$parsed = Carbon::parse($rawPick);
+			} catch (\Throwable $e) {
+				$parsed = Carbon::today();
+			}
+			$date = $parsed->format('d-m-Y');
+			$date1 = $parsed->format('Y-m-d');
+
+			try {
+
+			$today_deposit = Point::where('tr_nature', 'TRDEPO002')->where('tr_status', 'Success')->where('date', $date)->get()->sum('tr_value');
+			$winningAmount = (float) Point::where('tr_nature', 'TRWIN005')->sum('tr_value');
 			
 			$Disawar = GameLoad::where('table_id','DISAWAR')->where('tr_nature','TRGAME001')->where('date', $date)->get()->sum('tr_value');
 			$Disawar_winning = Point::where('table_id','DISAWAR')->where('tr_nature','TRWIN005')->where('date', $date)->get()->sum('win_value');
@@ -111,15 +130,13 @@ class DashboardController extends Controller
 			$matkamarket_winning = Point::where('table_id','MATKAMARKET')->where('tr_nature','TRWIN005')->where('date', $date)->get()->sum('win_value');
 			$matkamarket_pl = $matkamarket-$matkamarket_winning;
 
-			$customer_balance = User::whereNotNull('_id')
-			->where('created_at', '>=', new UTCDateTime(strtotime($date . ' 00:00:00') * 1000))
-			->where('created_at', '<=', new UTCDateTime(strtotime($date . ' 23:59:59') * 1000))
-			->get()->sum('credit');
+			// Do not use where('date', …) on User. Builder sum() avoids loading all users into memory.
+			$customer_balance = (float) User::whereNotNull('_id')->sum('credit');
 
 			$PointData = Point::where('tr_nature', 'TRDEPO002')->where('tr_status', 'Success')->where('date', $date)->get()->sum('tr_value');
 			$DepositData = DepositHistory::where('tr_nature', 'TRDEPO002')->where('tr_status', 'Success')->where('date', $date)->get()->sum('tr_value');
 			$add_money = $PointData+$DepositData;
-		    $withdraw_money = Point::where('tr_status','Success')->where('tr_nature','TRWITH003')->where('date', $date)->sum('tr_value');
+			$withdraw_money = Point::where('tr_status','Success')->where('tr_nature','TRWITH003')->where('date', $date)->get()->sum('tr_value');
 			$pending_withdraw_money = Point::where('tr_status','Pending')->where('tr_nature','TRWITH003')->where('date', $date)->get()->sum('tr_value');
 			$cancel_withdraw_money = Point::where('tr_status','Cancelled')->where('tr_nature','TRWITH003')->where('date', $date)->get()->sum('tr_value');
 			$total_user = User::where('user_status','1')->count();
@@ -132,14 +149,19 @@ class DashboardController extends Controller
 			
 
 			return view('administrator.dashboard.index', compact('laxmidarbar','laxmidarbar_pl','laxmidarbar_winning','dubaiKing_pl','dubaiKing_winning','ShreeGanesh_pl','ShreeGanesh_winning','DelhiBazar_pl','DelhiBazar_winning','GaliBet_pl','GaliBet_winning','GhaziaBad_pl','GhaziaBad_winning','Faridabad_pl','Faridabad_winning','Disawar_pl','Disawar_winning','withdraw_money','pending_withdraw_money','cancel_withdraw_money','add_money','Total_bidding','customer_balance','todaypl','today_win','winningAmount','dubaiKing','GaliBet','DelhiBazar','ShreeGanesh','GhaziaBad','Faridabad','Disawar','today_deposit','TajBet','TajBet_winning','TajBet_pl','total_user','total_commission','avadhexpress','avadhexpress_winning','avadhexpress_pl','rajdhanigold','rajdhanigold_winning','rajdhanigold_pl','morningstar','morningstar_winning','morningstar_pl','londonbazaar','londonbazaar_winning','londonbazaar_pl','devdarshan','devdarshan_winning','devdarshan_pl','nepalborder','nepalborder_winning','nepalborder_pl','indiaclub','indiaclub_winning','indiaclub_pl', 'matkamarket', 'matkamarket_winning','matkamarket_pl'));
+
+			} catch (\Throwable $e) {
+				Log::error('Dashboard filtered stats failed: '.$e->getMessage(), ['exception' => $e]);
+			}
 		}
-		else{
+
+		{
 			$date = date('d-m-Y');
 			$ymd_date = date('Y-m-d');
 			$commissiondate = date('Y-m-d');
 			$today_deposit = Point::where('tr_nature', 'TRDEPO002')->where('tr_status', 'Success')->where('date', $date)->get()->sum('tr_value');
 			
-			$winningAmount = Point::where('tr_nature', 'TRWIN005')->sum('tr_value');
+			$winningAmount = (float) Point::where('tr_nature', 'TRWIN005')->sum('tr_value');
 
 			$Disawar = GameLoad::where('table_id','DISAWAR')->where('tr_nature','TRGAME001')->where('date', $date)->get()->sum('tr_value');
 			$Disawar_winning = Point::where('table_id','DISAWAR')->where('tr_nature','TRWIN005')->where('date', $date)->get()->sum('win_value');
@@ -219,7 +241,7 @@ class DashboardController extends Controller
 			$matkamarket_winning = Point::where('table_id','MATKAMARKET')->where('tr_nature','TRWIN005')->where('date', $date)->get()->sum('win_value');
 			$matkamarket_pl = $matkamarket-$matkamarket_winning;
 
-			$customer_balance = User::whereNotNull('_id')->get()->sum('credit');
+			$customer_balance = (float) User::whereNotNull('_id')->sum('credit');
 			$PointData = Point::where('tr_nature', 'TRDEPO002')->where('tr_status', 'Success')->where('date', $date)->get()->sum('tr_value');
 			$DepositData = DepositHistory::where('tr_nature', 'TRDEPO002')->where('tr_status', 'Success')->where('date', $date)->get()->sum('tr_value');
 			$add_money = $PointData+$DepositData;
@@ -248,7 +270,7 @@ class DashboardController extends Controller
 			$date = date('d-m-Y',strtotime($_GET['select_date']));
 			$date1 = date('Y-m-d',strtotime($_GET['select_date']));
 			
-			$today_deposit = Point::where('tr_nature', 'TRDEPO002')->where('date', $date)->get()->sum('tr_value');
+			$today_deposit = Point::where('tr_nature', 'TRDEPO002')->where('tr_status', 'Success')->where('date', $date)->get()->sum('tr_value');
 			$winningAmount = Point::where('tr_nature', 'TRWIN005')->get()->sum('tr_value');
 			
 			$Disawar = Point::where('table_id','DISAWAR')->where('tr_nature','TRGAME001')->where('date', $date)->get()->sum('tr_value');

@@ -28,7 +28,12 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->registerFallbackSymfonyMimeGuesser();
-        URL::forceScheme('https');
+        // Only force HTTPS when APP_URL is https. Unconditional forceScheme breaks local
+        // http:// (WAMP, php artisan serve): form actions become https:// and POST never hits the app.
+        $appUrl = (string) config('app.url', '');
+        if ($appUrl !== '' && str_starts_with($appUrl, 'https://')) {
+            URL::forceScheme('https');
+        }
     }
 
     /**

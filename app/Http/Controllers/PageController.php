@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Market;
 use App\Models\Result;
 use App\Models\Faq;
+use App\Models\CmsPage;
 use URL;
 use DB;
 use Session;
@@ -94,7 +95,9 @@ class PageController extends Controller
 
     public function term_conditions()
     {
-        return view('front.page.term_conditions');
+        $page = CmsPage::terms();
+
+        return view('front.page.term_conditions', compact('page'));
     }
 
     public function privacy_policy()

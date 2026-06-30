@@ -13,6 +13,10 @@
 			<div class="about_page">
 				<div class="row">
 					<div class="col-md-12">
+						@if (!empty($page) && !empty(trim(strip_tags((string) ($page->body_html ?? '')))))
+						<h4>{{ $page->title ?? 'Terms & Conditions' }}</h4>
+						<div class="cms-terms-body">{!! $page->body_html !!}</div>
+						@else
 						<h4>Entire Agreement</h4>
 						<p>Except where additional terms and conditions are provided which are product specific, these terms and conditions supersede all previous representations, understandings, or agreements and shall prevail notwithstanding any variance with any other terms of any order submitted. By using the services of Home Edge. In you agree to be bound by the Terms and Conditions.</p>
 						<h6>Warranty And Disclaimer</h6>
@@ -50,10 +54,7 @@ Any order placed with and accepted by Seller may be cancelled by Buyer only upon
 						
 						
 
-						
-						
-						
-						
+						@endif
 			        </div>
 				</div>
 			</div>
